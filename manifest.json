@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Phishing Shield",
+  "version": "1.0.0",
+  "description": "Inspects the active tab's URL and highlights signs of phishing or domain spoofing.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png"
+  },
+  "permissions": ["activeTab"]
+}

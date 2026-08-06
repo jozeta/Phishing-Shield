@@ -1,0 +1,51 @@
+body {
+  width: 380px;
+  margin: 0;
+  padding: 12px;
+  background-color: #f2f2f7;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.card {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #1c1c1e;
+}
+
+.url-display-container {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e5ea;
+  font-size: 12px;
+  word-break: break-all;
+  line-height: 1.5;
+  user-select: text;
+}
+
+.status-badge {
+  margin-top: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.status-safe {
+  background-color: #e3fbe3;
+  color: #1e7e34;
+}
+
+.status-danger {
+  background-color: #ffeef0;
+  color: #d9383a;
+}
