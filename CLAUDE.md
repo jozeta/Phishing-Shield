@@ -29,5 +29,5 @@ and a `co.uk`-style domain.
   DOM. The URL is attacker-controlled.
 - Keep permissions minimal (`activeTab` only); no network requests, no remote code.
 - These are heuristics, not verdicts; keep the README's limitations honest.
-- The README "Installation" note says `manifest.json` is missing; it now exists, so update that
-  note when you next touch the README.
+- README screenshots in `docs/screenshots/` were rendered from the real popup with a stubbed
+  `chrome.tabs.query`; regenerate them if the popup's look changes.

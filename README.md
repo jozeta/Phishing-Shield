@@ -2,6 +2,12 @@
 
 A lightweight browser extension popup that inspects the URL of the active tab and highlights signs of phishing or domain-spoofing — unencrypted connections, punycode homograph attacks, and suspicious characters in the core domain.
 
+## Screenshots
+
+| Valid HTTPS domain | Unencrypted connection | Punycode look-alike |
+|---|---|---|
+| ![Popup showing a validated HTTPS domain](docs/screenshots/popup-safe.png) | ![Popup warning about a non-HTTPS connection](docs/screenshots/popup-http.png) | ![Popup flagging punycode spoofing on the core domain](docs/screenshots/popup-punycode.png) |
+
 ## Description
 
 Phishing Shield is a minimal browser-extension "inspector" that helps users quickly sanity-check the address bar of the page they're currently viewing. Instead of trusting the URL at a glance, it parses the hostname, isolates the **registrable (main) domain** from subdomains, and visually distinguishes the two — making it much harder for a spoofed subdomain (e.g. `paypal.com.security-check.example`) to blend in with the real domain.
@@ -33,6 +39,7 @@ All URL content is escaped with a dedicated `escapeHtml` helper before being ins
 
 ```
 Phishing-Shield/
+├── manifest.json      # Manifest V3: popup action, activeTab permission
 ├── icons/
 │   └── icon16.png     # Extension toolbar icon
 ├── popup.html          # Popup markup
@@ -41,10 +48,6 @@ Phishing-Shield/
 ```
 
 ## Installation
-
-> **Note:** This repository currently contains only the popup UI/logic — a `manifest.json` is required for the browser to load it as an extension. Add a Manifest V3 file (declaring `popup.html` as the `default_popup` action and `tabs`/`activeTab` permission) alongside these files before loading it as an unpacked extension.
-
-Once a manifest is in place:
 
 1. Open `chrome://extensions` (or the equivalent page in your Chromium-based browser).
 2. Enable **Developer mode**.
