@@ -31,3 +31,13 @@ build/
 # Environment variables
 .env
 .env.local
+
+# --- Baseline: macOS, Claude Code and secrets ---
+._*
+.claude/settings.local.json
+.remember/
+.env.*
+!.env.example
+*.key
+*.p12
+*.pfx
