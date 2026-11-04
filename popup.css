@@ -30,6 +30,24 @@ h3 {
   user-select: text;
 }
 
+/* Parts of the rendered URL (set by popup.js) */
+.url-dim {
+  color: #8e8e93;
+}
+
+.url-danger {
+  color: #ff3b30;
+}
+
+.url-main {
+  color: #1c1c1e;
+  font-weight: bold;
+}
+
+.url-main.url-danger {
+  color: #ff3b30;
+}
+
 .status-badge {
   margin-top: 12px;
   padding: 6px 10px;

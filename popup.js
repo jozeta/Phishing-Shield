@@ -9,8 +9,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     return hostname.startsWith('[') && hostname.endsWith(']');
   }
 
-  function escapeHtml(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  // Renders the URL as coloured parts. Text goes in via textContent only (never innerHTML): the
+  // URL is attacker-controlled. The spaces between parts match how the popup has always looked.
+  function renderUrlParts(parts) {
+    const nodes = [];
+    for (const { text, className } of parts) {
+      if (nodes.length) nodes.push(document.createTextNode(' '));
+      const span = document.createElement('span');
+      span.className = className;
+      span.textContent = text;
+      nodes.push(span);
+    }
+    urlDisplay.replaceChildren(...nodes);
   }
 
   function extractMainDomain(hostname) {
@@ -74,45 +84,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isDomainSafe = ALLOWED_DOMAIN_REGEX.test(mainDomain);
     const isPunycode = mainDomain.toLowerCase().startsWith('xn--');
 
-    let generalStyle = '', mainDomainStyle = '';
+    // Punycode in any subdomain label (e.g. xn--pypal-4ve.example.com): a look-alike that sits in
+    // front of a real registrable domain. Checked after the core-domain checks, which matter more.
+    const hasPunycodeSubdomain = subdomain.split('.').some((label) => label.toLowerCase().startsWith('xn--'));
+
+    let generalClass = 'url-dim', subdomainClass = 'url-dim', mainDomainClass = 'url-main url-danger';
 
     if (!isHttps) {
-      generalStyle = 'color: #ff3b30; font-weight: normal;';
-      mainDomainStyle = 'color: #ff3b30; font-weight: bold;';
-      
+      generalClass = subdomainClass = 'url-danger';
+
       securityStatus.className = "status-badge status-danger";
       securityStatus.textContent = "⚠️ UNENCRYPTED CONNECTION (NON-HTTPS)";
     } else if (isIp) {
-      generalStyle = 'color: #8e8e93; font-weight: normal;';
-      mainDomainStyle = 'color: #ff3b30; font-weight: bold;';
-
       securityStatus.className = "status-badge status-danger";
       securityStatus.textContent = "🚨 RAW IP ADDRESS USED AS HOST (NO DOMAIN NAME)";
     } else if (!isDomainSafe || isPunycode) {
-      generalStyle = 'color: #8e8e93; font-weight: normal;';
-      mainDomainStyle = 'color: #ff3b30; font-weight: bold;';
-      
       securityStatus.className = "status-badge status-danger";
-      securityStatus.textContent = isPunycode 
-        ? "🚨 PUNYCODE SPOOFING DETECTED ON CORE DOMAIN" 
+      securityStatus.textContent = isPunycode
+        ? "🚨 PUNYCODE SPOOFING DETECTED ON CORE DOMAIN"
         : "🚨 SUSPICIOUS CORE DOMAIN CHARACTERS";
+    } else if (hasPunycodeSubdomain) {
+      subdomainClass = 'url-danger';
+      mainDomainClass = 'url-main';
+
+      securityStatus.className = "status-badge status-danger";
+      securityStatus.textContent = "⚠️ PUNYCODE LOOK-ALIKE IN SUBDOMAIN";
     } else {
-      generalStyle = 'color: #8e8e93; font-weight: normal;';
-      mainDomainStyle = 'color: #1c1c1e; font-weight: bold;';
-      
+      mainDomainClass = 'url-main';
+
       securityStatus.className = "status-badge status-safe";
       securityStatus.textContent = "✅ VALIDATED STANDARD HTTPS DOMAIN";
     }
 
-    urlDisplay.innerHTML = `
-      <span style="${generalStyle}">${escapeHtml(prefix)}</span>
-      <span style="${generalStyle}">${escapeHtml(subdomain)}</span>
-      <span style="${mainDomainStyle}">${escapeHtml(mainDomain)}</span>
-      <span style="${generalStyle}">${escapeHtml(rest)}</span>
-    `;
+    renderUrlParts([
+      { text: prefix, className: generalClass },
+      { text: subdomain, className: subdomainClass },
+      { text: mainDomain, className: mainDomainClass },
+      { text: rest, className: generalClass },
+    ]);
 
   } catch (err) {
-    urlDisplay.innerHTML = `<span style="color: #ff3b30; font-weight: bold;">${escapeHtml(urlString)}</span>`;
+    renderUrlParts([{ text: urlString, className: 'url-main url-danger' }]);
     securityStatus.className = "status-badge status-danger";
     securityStatus.textContent = "UNKNOWN PROTOCOL / UNPARSABLE CONTEXT";
   }
