@@ -14,7 +14,7 @@ prefer otherwise.
 
 ## Scope
 
-Of particular interest: URLs that inject markup into the popup, or spoofed domains the checks wrongly mark as safe.
+Of particular interest: URLs that inject markup into the popup, spoofed domains the checks wrongly mark as safe, and anything that makes the extension read or send more than it should (it asks for `activeTab`, plus `tabs` only when the toolbar verdict is switched on).
 
 ## Supported versions
 

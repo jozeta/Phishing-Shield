@@ -6,6 +6,17 @@ Releases follow the project's git tags. Entries were reconstructed from the comm
 
 ## [Unreleased]
 
+- Brand look-alikes: ~70 brands phishing often impersonates (global + Swedish: BankID, Swish, Swedbank, Nordea, Skatteverket, PostNord, …) in `lib/brands.js`; flags look-alike domains (`paypa1.com`, `netfilx.com`), brand names on sites the brand doesn't own (`paypal.com.secure-login.net`, `swedbank-login.se`) and brand names on unexpected endings (`paypal.support`)
+- The full Public Suffix List (ICANN + private domains) is bundled in `lib/psl-data.js` and decides the registrable domain; `npm run update-psl` refreshes it. Replaces the short second-level-TLD and shared-hosting lists
+- Opt-in toolbar verdict: a popup checkbox requests the optional `tabs` permission; while granted, `background.js` badges every tab's icon (red/orange `!`, green `✓`). Installs still ask only for `activeTab`
+- A login part before `@` (`https://paypal.com@evil.example`) is flagged
+- An unusual port (`:8443`) is a warning
+- Every finding is listed: the most serious is the headline badge, the rest appear below it
+- Dark mode following the system setting (light look unchanged)
+- Shield icon at 16, 32, 48 and 128 px (`icons/icon.svg` is the source)
+- The checks live in `lib/analyze.js`, shared by the popup and the service worker
+- README: new screenshots (brand, look-alike, dark mode), checks table, toolbar verdict, privacy, project structure
+
 - Fix: a trailing dot (`paypal.com.evil.com.`) no longer shrinks the highlighted domain to `com.` and hides the real one
 - Fix: on shared hosting (`github.io`, `netlify.app`, `vercel.app` and about 20 more) the site owner's label is part of the highlighted domain
 - Fix: browser, file and extension pages (`chrome://`, `file://`, `about:blank`) get a grey "not a website" badge instead of "unencrypted connection", and are shown as-is (`about:blank`, not `about://blank`)
