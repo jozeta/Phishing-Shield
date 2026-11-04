@@ -151,3 +151,34 @@ h3 {
 .finding-warn {
   color: var(--warn-text);
 }
+
+/* Opt-in toolbar verdict */
+.settings {
+  margin-top: 10px;
+  padding: 0 4px;
+  font-size: 11px;
+  color: var(--neutral-text);
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.toggle input {
+  margin: 0;
+  accent-color: var(--focus);
+}
+
+.toggle input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.settings-note {
+  margin: 4px 0 0 19px;
+  line-height: 1.4;
+}

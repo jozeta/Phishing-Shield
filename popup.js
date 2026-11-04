@@ -15,12 +15,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     'main-warn': 'url-main url-warn',
   };
 
+  // Opt-in toolbar verdict (background.js): the optional "tabs" permission is the on/off switch.
+  // permissions.request needs the click itself, so it's called straight from the change event.
+  async function setUpBadgeToggle() {
+    const toggle = document.getElementById('badgeToggle');
+    const tabs = { permissions: ['tabs'] };
+    toggle.checked = await chrome.permissions.contains(tabs);
+    toggle.addEventListener('change', async () => {
+      try {
+        if (toggle.checked) toggle.checked = await chrome.permissions.request(tabs);
+        else await chrome.permissions.remove(tabs);
+      } catch {
+        toggle.checked = await chrome.permissions.contains(tabs);
+      }
+    });
+  }
+
   function span(text, className) {
     const el = document.createElement('span');
     el.className = className;
     el.textContent = text;
     return el;
   }
+
+  setUpBadgeToggle();
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 

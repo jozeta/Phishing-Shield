@@ -32,7 +32,11 @@ async function inspect(url, chromeExtras = {}) {
       getElementById: (id) => (els[id] ??= fakeElement("div")),
       createElement: (tag) => fakeElement(tag),
     },
-    chrome: { tabs: { query: async () => [url === null ? {} : { url }] }, ...chromeExtras },
+    chrome: {
+      tabs: { query: async () => [url === null ? {} : { url }] },
+      permissions: { contains: async () => false, request: async () => true, remove: async () => true },
+      ...chromeExtras,
+    },
   };
   context.globalThis = context;
   vm.createContext(context);
@@ -275,3 +279,79 @@ test("brand names padded with phishing words are caught", async () => {
   // flagged, because ordinary words come that close too (blocked/blocket, trader/tradera).
   assert.match((await inspect("https://spotity.com/")).status, /VALIDATED/);
 });
+
+// --- Opt-in toolbar verdict -------------------------------------------------------------------
+
+test("popup toggle reflects the permission and asks for it on click", async () => {
+  const calls = [];
+  let granted = false;
+  const permissions = {
+    contains: async () => granted,
+    request: async (p) => { calls.push(["request", [...p.permissions]]); granted = true; return true; },
+    remove: async (p) => { calls.push(["remove", [...p.permissions]]); granted = false; return true; },
+  };
+  const r = await inspect("https://example.com/", { permissions });
+  const toggle = r.els.badgeToggle;
+  assert.equal(toggle.checked, false);
+  toggle.checked = true; await toggle.listeners.change();
+  assert.equal(toggle.checked, true);
+  toggle.checked = false; await toggle.listeners.change();
+  assert.deepEqual(calls, [["request", ["tabs"]], ["remove", ["tabs"]]]);
+});
+
+test("popup toggle unticks itself when the permission is refused", async () => {
+  const r = await inspect("https://example.com/", { permissions: { contains: async () => false, request: async () => false } });
+  r.els.badgeToggle.checked = true; await r.els.badgeToggle.listeners.change();
+  assert.equal(r.els.badgeToggle.checked, false);
+});
+
+// Loads background.js like the browser does (importScripts + listeners) with a fake chrome.
+function loadBackground({ granted }) {
+  const badges = {}, listeners = {};
+  const on = (name) => ({ addListener: (fn) => { listeners[name] = fn; } });
+  const tabs = [{ id: 1, url: "https://paypa1.com/" }, { id: 2, url: "https://example.com:8443/" },
+    { id: 3, url: "https://www.example.com/" }, { id: 4, url: "chrome://newtab/" }];
+  const context = {
+    URL, console,
+    importScripts: (...files) => { for (const f of files) vm.runInContext(readFileSync(new URL(`../${f}`, import.meta.url), "utf8"), context); },
+    chrome: {
+      permissions: { contains: async () => granted.value, onAdded: on("added"), onRemoved: on("removed") },
+      runtime: { onStartup: on("startup"), onInstalled: on("installed") },
+      // Without the permission the browser hides tab URLs; mimic that.
+      tabs: { onUpdated: on("updated"), query: async () => tabs.map((t) => (granted.value ? t : { id: t.id })) },
+      action: {
+        setBadgeText: async ({ tabId, text }) => { (badges[tabId] ??= {}).text = text; },
+        setBadgeBackgroundColor: async ({ tabId, color }) => { (badges[tabId] ??= {}).color = color; },
+      },
+    },
+  };
+  context.globalThis = context;
+  vm.createContext(context);
+  vm.runInContext(readFileSync(new URL("../background.js", import.meta.url), "utf8"), context);
+  return { badges, listeners, tabs };
+}
+
+test("background: with the permission, each tab gets a badge for its verdict", async () => {
+  const granted = { value: true };
+  const { badges, listeners } = loadBackground({ granted });
+  await listeners.added();
+  assert.deepEqual(badges[1], { text: "!", color: "#d9383a" });
+  assert.deepEqual(badges[2], { text: "!", color: "#a35200" });
+  assert.deepEqual(badges[3], { text: "✓", color: "#1e7e34" });
+  assert.equal(badges[4].text, "");
+  await listeners.updated(3, { url: "https://paypal.com.secure-login.net/" }, { id: 3, url: "https://paypal.com.secure-login.net/" });
+  assert.equal(badges[3].text, "!");
+});
+
+test("background: without the permission, nothing is shown and turning it off clears badges", async () => {
+  const granted = { value: true };
+  const { badges, listeners } = loadBackground({ granted });
+  await listeners.installed();
+  assert.equal(badges[1].text, "!");
+  granted.value = false;
+  await listeners.removed();
+  for (const id of [1, 2, 3, 4]) assert.equal(badges[id].text, "", `tab ${id}`);
+  await listeners.updated(1, { url: "https://paypa1.com/" }, { id: 1 });
+  assert.equal(badges[1].text, "");
+});
+

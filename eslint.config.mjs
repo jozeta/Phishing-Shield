@@ -21,6 +21,10 @@ export default [
     },
   },
   {
+    files: ["background.js"],
+    languageOptions: { globals: { ...globals.serviceworker } },
+  },
+  {
     files: ["**/*.mjs", "eslint.config.*"],
     languageOptions: { sourceType: "module" },
   },
