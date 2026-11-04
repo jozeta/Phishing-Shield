@@ -169,3 +169,11 @@ test("several findings: the most serious is the headline, the rest are listed be
   assert.deepEqual(r.more, ["⚠️ UNENCRYPTED CONNECTION (NON-HTTPS)"]);
   assert.deepEqual((await inspect("https://example.com/")).more, []);
 });
+
+test("a login part before @ is flagged: it disguises the real site", async () => {
+  const r = await inspect("https://paypal.com@evil.example.org/");
+  assert.match(r.status, /TEXT BEFORE "@" DISGUISES THE REAL SITE/);
+  assert.match(r.badge, /status-danger/);
+  assert.equal(partClass(r, "paypal.com@"), "url-danger");
+  assert.match((await inspect("https://user:secret@example.com/")).status, /DISGUISES/);
+});
