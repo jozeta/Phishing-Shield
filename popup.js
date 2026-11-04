@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     warn: 'url-warn',
     main: 'url-main',
     'main-danger': 'url-main url-danger',
+    'main-warn': 'url-main url-warn',
   };
 
   function span(text, className) {

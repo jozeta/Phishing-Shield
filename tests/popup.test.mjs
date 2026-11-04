@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 // The scripts popup.html loads, in the same order. Add new lib files here too.
-const SCRIPTS = ["lib/psl-data.js", "lib/analyze.js", "popup.js"];
+const SCRIPTS = ["lib/psl-data.js", "lib/brands.js", "lib/analyze.js", "popup.js"];
 const sources = SCRIPTS.map((f) => [f, readFileSync(new URL(`../${f}`, import.meta.url), "utf8")]);
 
 // A minimal fake DOM: just enough for popup.js (getElementById, createElement, replaceChildren).
@@ -202,4 +202,76 @@ test("the Public Suffix List decides where the registrable domain starts", async
   for (const [url, expected] of Object.entries(cases)) {
     assert.equal(mainDomain(await inspect(url)), expected, url);
   }
+});
+
+test("look-alikes of brand domains are flagged", async () => {
+  const cases = {
+    "https://paypa1.com/": "PAYPAL.COM",            // 1 for l
+    "https://www.paypai.com/signin": "PAYPAL.COM",  // i for l
+    "https://micros0ft-support.com/": "MICROSOFT.COM",
+    "https://netfllx.com/": "NETFLIX.COM",
+    "https://bankld.se/": "BANKID.COM",
+    "https://handelsbankem.se/": "HANDELSBANKEN.SE", // one letter off, long name
+    "https://arnazon.com/": "AMAZON.COM",           // rn for m
+  };
+  for (const [url, brand] of Object.entries(cases)) {
+    const r = await inspect(url);
+    assert.equal(r.status, `🚨 LOOK-ALIKE OF ${brand}`, url);
+    assert.ok(r.parts.some((p) => p.className === "url-main url-danger"), url);
+  }
+});
+
+test("a brand name in a domain the brand doesn't own is flagged", async () => {
+  let r = await inspect("https://paypal.com.secure-login.net/");
+  assert.match(r.status, /"PAYPAL" ON A SITE THAT ISN'T PAYPAL\.COM/);
+  assert.equal(partClass(r, "paypal.com."), "url-danger");
+  r = await inspect("https://swedbank-login.se/");
+  assert.match(r.status, /"SWEDBANK" ON A SITE THAT ISN'T SWEDBANK\.SE/);
+  assert.match((await inspect("https://secure-paypal.netlify.app/")).status, /"PAYPAL"/);
+});
+
+test("a brand name alone on an unexpected ending is a warning", async () => {
+  for (const url of ["https://paypal.support/", "https://swedbank.co/"]) {
+    const r = await inspect(url);
+    assert.match(r.status, /NAME ON AN ENDING .* DOESN'T USE/, url);
+    assert.match(r.badge, /status-warn/, url);
+  }
+});
+
+test("the brands' own domains and ordinary words are not flagged", async () => {
+  for (const url of [
+    "https://www.paypal.com/", "https://login.microsoftonline.com/", "https://www.google.se/",
+    "https://www.amazon.co.uk/", "https://contoso.sharepoint.com/", "https://www.swedbank.se/",
+    "https://app.bankid.com/", "https://www.getswish.se/", "https://klara.se/", "https://apply.com/",
+    "https://www.swiss.com/", "https://hotel-booking.com/", "https://goggle.com/", "https://nordic.se/",
+    "https://stackoverflow.com/", "https://www.dn.se/", "https://user.github.io/",
+  ]) {
+    assert.match((await inspect(url)).status, /VALIDATED/, url);
+  }
+});
+
+test("ordinary words and near-miss names are not mistaken for brands", async () => {
+  for (const url of [
+    "https://trader.com/", "https://blocked.com/", "https://mint-finance.se/", "https://revolt.com/",
+    "https://airexpress.com/", "https://scandia.com/", "https://nordnetwork.se/", "https://postnorden.se/",
+    "https://weather-outlook.com/", "https://apple-pie-recipes.com/", "https://chase-the-sun.com/",
+    "https://swish-basketball.com/", "https://telegraph.co.uk/", "https://appleinsider.com/",
+  ]) {
+    assert.match((await inspect(url)).status, /VALIDATED/, url);
+  }
+});
+
+test("brand names padded with phishing words are caught", async () => {
+  for (const [url, word] of [
+    ["https://paypalsecure.com/", "PAYPAL"], ["https://myswedbanklogin.com/", "SWEDBANK"],
+    ["https://apple-id-verify.com/", "APPLE"], ["https://ups-tracking.net/", "UPS"],
+    ["https://outlook-login.info/", "OUTLOOK"],
+  ]) {
+    assert.match((await inspect(url)).status, new RegExp(`"${word}" ON A SITE`), url);
+  }
+  assert.match((await inspect("https://netfilx.com/")).status, /LOOK-ALIKE OF NETFLIX\.COM/);
+  assert.match((await inspect("https://amzaon.com/")).status, /LOOK-ALIKE OF AMAZON\.COM/);
+  // Known gap, on purpose: one changed letter in a name under 8 letters (spotity, blocked) isn't
+  // flagged, because ordinary words come that close too (blocked/blocket, trader/tradera).
+  assert.match((await inspect("https://spotity.com/")).status, /VALIDATED/);
 });

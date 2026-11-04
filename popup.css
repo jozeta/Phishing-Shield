@@ -78,7 +78,8 @@ h3 {
   color: #a35200;
 }
 
-.url-warn {
+.url-warn,
+.url-main.url-warn {
   color: #a35200;
 }
 
