@@ -177,3 +177,13 @@ test("a login part before @ is flagged: it disguises the real site", async () =>
   assert.equal(partClass(r, "paypal.com@"), "url-danger");
   assert.match((await inspect("https://user:secret@example.com/")).status, /DISGUISES/);
 });
+
+test("an unusual port is a warning; the default ports are not", async () => {
+  const r = await inspect("https://example.com:8443/login");
+  assert.match(r.status, /UNUSUAL PORT :8443/);
+  assert.match(r.badge, /status-warn/);
+  assert.equal(partClass(r, ":8443"), "url-warn");
+  // URL drops :443 on https and :80 on http, so these show no port at all.
+  assert.match((await inspect("https://example.com:443/")).status, /VALIDATED/);
+  assert.doesNotMatch((await inspect("http://example.com:80/")).status, /PORT/);
+});
