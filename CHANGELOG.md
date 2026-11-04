@@ -6,6 +6,11 @@ Releases follow the project's git tags. Entries were reconstructed from the comm
 
 ## [Unreleased]
 
+- Fix: a trailing dot (`paypal.com.evil.com.`) no longer shrinks the highlighted domain to `com.` and hides the real one
+- Fix: on shared hosting (`github.io`, `netlify.app`, `vercel.app` and about 20 more) the site owner's label is part of the highlighted domain
+- Fix: browser, file and extension pages (`chrome://`, `file://`, `about:blank`) get a grey "not a website" badge instead of "unencrypted connection", and are shown as-is (`about:blank`, not `about://blank`)
+- The URL parts are shown without spaces between them, so the popup shows the exact URL; README screenshots regenerated (the old ones were cropped)
+
 - New warning: punycode in a subdomain label (e.g. `xn--pypal-4ve.example.com`) is flagged as a look-alike; a punycode TLD alone is not
 - The URL is now rendered with `createElement`/`textContent` instead of `innerHTML` (no visual change); the `escapeHtml` helper is gone and the no-unsanitized lint rule is now an error
 - More tests: subdomain punycode, underscore in the core domain, punycode TLD, text-only rendering

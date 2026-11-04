@@ -14,14 +14,17 @@ registrable domain. Plain HTML/CSS/JS, no build, no runtime dependencies (ESLint
 `chrome://extensions` → Developer mode → **Load unpacked** → this folder, then pin it and click
 the icon on any page. After edits, press **Reload** on the extension card. `npm test` runs
 `popup.js` against fake tabs and a minimal fake DOM (verdicts, host splitting, text-only rendering); still check a normal HTTPS site,
-an `http://` site, a punycode domain (e.g. `xn--` test domains) and a `co.uk`-style domain by hand.
+an `http://` site, a punycode domain (e.g. `xn--` test domains), a `co.uk`-style domain and a
+`chrome://` page by hand.
 
 ## Code
 
 - `manifest.json`: MV3, popup action only, permission `activeTab`.
 - `popup.js`: gets the URL via `chrome.tabs.query`, parses it with `URL`, splits subdomain from
-  main domain in `extractMainDomain` (small list of second-level TLDs like `co.uk`; IPv4 and
-  bracketed IPv6 left as-is), runs the checks (HTTPS, raw IP, core-domain characters and punycode,
+  main domain in `extractMainDomain` (small list of second-level TLDs like `co.uk`, a short
+  `SHARED_HOSTING_SUFFIXES` list like `github.io`, trailing-dot FQDNs; IPv4 and bracketed IPv6 left
+  as-is; `mainDomain` is shown, `checkDomain` is checked), skips non-web pages (`chrome:`, `file:`,
+  `about:`…) with a grey `status-neutral` badge, runs the checks (HTTPS, raw IP, core-domain characters and punycode,
   punycode in a subdomain; first match wins) and renders a colour-coded breakdown and a status badge
   with `renderUrlParts`.
 - `popup.html`, `popup.css`: markup and styles; `icons/icon16.png`.

@@ -67,3 +67,8 @@ h3 {
   background-color: #ffeef0;
   color: #d9383a;
 }
+
+.status-neutral {
+  background-color: #f2f2f7;
+  color: #636366;
+}

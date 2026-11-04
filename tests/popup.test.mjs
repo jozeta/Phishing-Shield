@@ -8,7 +8,7 @@ import vm from "node:vm";
 
 const source = readFileSync(new URL("../popup.js", import.meta.url), "utf8");
 
-// A minimal fake DOM: just enough for popup.js (createElement, createTextNode, replaceChildren).
+// A minimal fake DOM: just enough for popup.js (createElement, replaceChildren).
 // Rendered URL parts come back as [{ className, text }] so tests can see exactly what is shown.
 function fakeElement(tag) {
   return {
@@ -26,7 +26,6 @@ async function inspect(url) {
       addEventListener: (type, fn) => { if (type === "DOMContentLoaded") onReady = fn; },
       getElementById: (id) => els[id],
       createElement: (tag) => fakeElement(tag),
-      createTextNode: (text) => ({ nodeType: 3, textContent: text }),
     },
     chrome: { tabs: { query: async () => [url === null ? {} : { url }] } },
   };
@@ -92,14 +91,20 @@ test("an unparsable URL is shown as plain text, never as markup", async () => {
 
 test("URL parts are text nodes in spans, so markup in the path stays text", async () => {
   const r = await inspect('https://example.com/<img src=x onerror=alert(1)>"');
-  assert.ok(r.nodes.every((n) => n.tagName === "span" || n.nodeType === 3));
-  assert.match(r.parts[3].text, /%3Cimg/); // URL percent-encodes it; either way it is only text
+  assert.ok(r.nodes.every((n) => n.tagName === "span"));
+  assert.match(r.parts.at(-1).text, /%3Cimg/); // URL percent-encodes it; either way it is only text
 });
 
-test("the whole URL stays readable: parts joined with spaces, as before", async () => {
+test("the parts join back into the exact URL, with no spaces added", async () => {
   const r = await inspect("https://www.example.com/path?q=1");
   assert.deepEqual(r.parts.map((p) => p.text), ["https://", "www.", "example.com", "/path?q=1"]);
-  assert.equal(r.nodes.length, 7); // 4 spans + 3 separating spaces
+  assert.equal(r.parts.map((p) => p.text).join(""), "https://www.example.com/path?q=1");
+  assert.equal(r.nodes.length, 4);
+});
+
+test("empty parts (no subdomain) render no span", async () => {
+  const r = await inspect("https://example.com/");
+  assert.deepEqual(r.parts.map((p) => p.text), ["https://", "example.com", "/"]);
 });
 
 test("characters URL lets through, like an underscore, are flagged on the core domain", async () => {
@@ -124,4 +129,27 @@ test("no tab URL: a plain message, nothing rendered as HTML", async () => {
   const r = await inspect(null);
   assert.match(r.text, /Unable to inspect/);
   assert.equal(r.nodes.length, 0);
+});
+
+const shown = (r) => r.parts.map((p) => p.text).join("");
+
+test("a trailing dot (FQDN) doesn't hide the real domain", async () => {
+  const r = await inspect("https://paypal.com.evil.com./login");
+  assert.equal(mainDomain(r), "evil.com.");
+  assert.equal(shown(r), "https://paypal.com.evil.com./login");
+});
+
+test("on shared hosting, the user's own label belongs to the highlighted domain", async () => {
+  assert.equal(mainDomain(await inspect("https://paypal-login.github.io/")), "paypal-login.github.io");
+  assert.equal(mainDomain(await inspect("https://a.b.netlify.app/")), "b.netlify.app");
+  assert.equal(mainDomain(await inspect("https://github.io/")), "github.io");
+});
+
+test("browser and local pages are not called unencrypted websites", async () => {
+  for (const url of ["chrome://extensions/", "file:///Users/me/doc.pdf", "about:blank", "chrome-extension://abc/page.html"]) {
+    const r = await inspect(url);
+    assert.match(r.status, /NOT A WEBSITE/, url);
+    assert.match(r.badge, /status-neutral/, url);
+    assert.equal(shown(r), url, url); // shown exactly, e.g. about:blank not about://blank
+  }
 });
