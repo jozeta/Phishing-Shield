@@ -72,3 +72,37 @@ h3 {
   background-color: #f2f2f7;
   color: #636366;
 }
+
+.status-warn {
+  background-color: #fff4e5;
+  color: #a35200;
+}
+
+.url-warn {
+  color: #a35200;
+}
+
+/* Further findings under the headline badge */
+.more-findings {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.more-findings:empty {
+  display: none;
+}
+
+.more-findings li {
+  margin-top: 4px;
+}
+
+.finding-danger {
+  color: #d9383a;
+}
+
+.finding-warn {
+  color: #a35200;
+}

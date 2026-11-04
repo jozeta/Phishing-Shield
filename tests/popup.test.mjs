@@ -6,30 +6,37 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
-const source = readFileSync(new URL("../popup.js", import.meta.url), "utf8");
+// The scripts popup.html loads, in the same order. Add new lib files here too.
+const SCRIPTS = ["lib/analyze.js", "popup.js"];
+const sources = SCRIPTS.map((f) => [f, readFileSync(new URL(`../${f}`, import.meta.url), "utf8")]);
 
-// A minimal fake DOM: just enough for popup.js (createElement, replaceChildren).
+// A minimal fake DOM: just enough for popup.js (getElementById, createElement, replaceChildren).
 // Rendered URL parts come back as [{ className, text }] so tests can see exactly what is shown.
 function fakeElement(tag) {
   return {
-    tagName: tag, className: "", textContent: "", children: [],
+    tagName: tag, className: "", textContent: "", children: [], checked: false, listeners: {},
     replaceChildren(...nodes) { this.children = nodes; this.textContent = ""; },
+    addEventListener(type, fn) { this.listeners[type] = fn; },
   };
 }
 
-async function inspect(url) {
-  const els = { urlDisplay: fakeElement("div"), securityStatus: fakeElement("div") };
+// Runs the popup's scripts against one tab URL, like opening the popup on that page.
+async function inspect(url, chromeExtras = {}) {
+  const els = {};
   let onReady;
   const context = {
     URL,
+    console,
     document: {
       addEventListener: (type, fn) => { if (type === "DOMContentLoaded") onReady = fn; },
-      getElementById: (id) => els[id],
+      getElementById: (id) => (els[id] ??= fakeElement("div")),
       createElement: (tag) => fakeElement(tag),
     },
-    chrome: { tabs: { query: async () => [url === null ? {} : { url }] } },
+    chrome: { tabs: { query: async () => [url === null ? {} : { url }] }, ...chromeExtras },
   };
-  vm.runInNewContext(source, context);
+  context.globalThis = context;
+  vm.createContext(context);
+  for (const [file, code] of sources) vm.runInContext(code, context, { filename: file });
   await onReady();
   const nodes = els.urlDisplay.children;
   return {
@@ -37,7 +44,9 @@ async function inspect(url) {
     badge: els.securityStatus.className,
     nodes,
     parts: nodes.filter((n) => n.tagName === "span").map((n) => ({ className: n.className, text: n.textContent })),
+    more: (els.moreFindings?.children ?? []).map((n) => n.textContent),
     text: els.urlDisplay.textContent,
+    els,
   };
 }
 
@@ -152,4 +161,11 @@ test("browser and local pages are not called unencrypted websites", async () => 
     assert.match(r.badge, /status-neutral/, url);
     assert.equal(shown(r), url, url); // shown exactly, e.g. about:blank not about://blank
   }
+});
+
+test("several findings: the most serious is the headline, the rest are listed below", async () => {
+  const r = await inspect("http://login.xn--pple-43d.com/");
+  assert.match(r.status, /PUNYCODE SPOOFING/);
+  assert.deepEqual(r.more, ["⚠️ UNENCRYPTED CONNECTION (NON-HTTPS)"]);
+  assert.deepEqual((await inspect("https://example.com/")).more, []);
 });
