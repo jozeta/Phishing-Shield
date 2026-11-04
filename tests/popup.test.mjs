@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 // The scripts popup.html loads, in the same order. Add new lib files here too.
-const SCRIPTS = ["lib/analyze.js", "popup.js"];
+const SCRIPTS = ["lib/psl-data.js", "lib/analyze.js", "popup.js"];
 const sources = SCRIPTS.map((f) => [f, readFileSync(new URL(`../${f}`, import.meta.url), "utf8")]);
 
 // A minimal fake DOM: just enough for popup.js (getElementById, createElement, replaceChildren).
@@ -186,4 +186,20 @@ test("an unusual port is a warning; the default ports are not", async () => {
   // URL drops :443 on https and :80 on http, so these show no port at all.
   assert.match((await inspect("https://example.com:443/")).status, /VALIDATED/);
   assert.doesNotMatch((await inspect("http://example.com:80/")).status, /PORT/);
+});
+
+test("the Public Suffix List decides where the registrable domain starts", async () => {
+  const cases = {
+    "https://shop.example.pp.se/": "example.pp.se",          // Swedish second-level suffix
+    "https://a.b.example.com.au/": "example.com.au",
+    "https://evil.example.ck/": "evil.example.ck",            // wildcard rule *.ck
+    "https://foo.www.ck/": "www.ck",                          // exception rule !www.ck
+    "https://bucket.s3.amazonaws.com/": "bucket.s3.amazonaws.com", // private-domain section
+    "https://x.paypal-login.pages.dev/": "paypal-login.pages.dev",
+    "https://localhost/": "localhost",
+    "https://www.example.xn--p1ai/": "example.xn--p1ai",      // .рф
+  };
+  for (const [url, expected] of Object.entries(cases)) {
+    assert.equal(mainDomain(await inspect(url)), expected, url);
+  }
 });

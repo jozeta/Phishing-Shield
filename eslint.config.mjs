@@ -6,7 +6,7 @@ import globals from "globals";
 import nounsanitized from "eslint-plugin-no-unsanitized";
 
 export default [
-  { ignores: ["vendor/**", "node_modules/**", "dist/**", "build/**", "coverage/**", "**/*.min.js"] },
+  { ignores: ["vendor/**", "node_modules/**", "dist/**", "build/**", "coverage/**", "**/*.min.js", "lib/psl-data.js"] },
   js.configs.recommended,
   nounsanitized.configs.recommended,
   {
