@@ -6,6 +6,9 @@ Releases follow the project's git tags. Entries were reconstructed from the comm
 
 ## [Unreleased]
 
+- ESLint (flat config, with the no-unsanitized rule) as a dev-only tool; CI runs `npm run lint`
+- First automated tests (tests/popup.test.mjs runs popup.js against fake tabs: verdicts, host splitting, escaping) and a CI workflow
+
 ## [1.0.0] - 2026-11-02
 
 - Initial commit: Phishing Shield browser extension
