@@ -6,6 +6,10 @@ Releases follow the project's git tags. Entries were reconstructed from the comm
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-09
+
+- Light-mode contrast meets WCAG AA: red URL text (`#d70015`), dimmed URL text (`#6e6e73`) and the red badge, findings and toolbar badge (`#c62828`) are slightly darker
+
 - Brand look-alikes: ~70 brands phishing often impersonates (global + Swedish: BankID, Swish, Swedbank, Nordea, Skatteverket, PostNord, …) in `lib/brands.js`; flags look-alike domains (`paypa1.com`, `netfilx.com`), brand names on sites the brand doesn't own (`paypal.com.secure-login.net`, `swedbank-login.se`) and brand names on unexpected endings (`paypal.support`)
 - The full Public Suffix List (ICANN + private domains) is bundled in `lib/psl-data.js` and decides the registrable domain; `npm run update-psl` refreshes it. Replaces the short second-level-TLD and shared-hosting lists
 - Opt-in toolbar verdict: a popup checkbox requests the optional `tabs` permission; while granted, `background.js` badges every tab's icon (red/orange `!`, green `✓`). Installs still ask only for `activeTab`

@@ -335,7 +335,7 @@ test("background: with the permission, each tab gets a badge for its verdict", a
   const granted = { value: true };
   const { badges, listeners } = loadBackground({ granted });
   await listeners.added();
-  assert.deepEqual(badges[1], { text: "!", color: "#d9383a" });
+  assert.deepEqual(badges[1], { text: "!", color: "#c62828" });
   assert.deepEqual(badges[2], { text: "!", color: "#a35200" });
   assert.deepEqual(badges[3], { text: "✓", color: "#1e7e34" });
   assert.equal(badges[4].text, "");

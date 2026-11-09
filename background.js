@@ -8,7 +8,7 @@ importScripts('lib/psl-data.js', 'lib/brands.js', 'lib/analyze.js');
 const TABS = { permissions: ['tabs'] };
 
 const BADGES = {
-  danger: { text: '!', color: '#d9383a' },
+  danger: { text: '!', color: '#c62828' },
   warn: { text: '!', color: '#a35200' },
   safe: { text: '✓', color: '#1e7e34' },
 };
