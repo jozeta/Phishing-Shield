@@ -6,6 +6,11 @@ Releases follow the project's git tags. Entries were reconstructed from the comm
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-12
+
+- The popup shows its version (read from `manifest.json`)
+- README: current version, "What's new" and the screenshots as a captioned grid
+
 ## [1.1.0] - 2026-11-09
 
 - Light-mode contrast meets WCAG AA: red URL text (`#d70015`), dimmed URL text (`#6e6e73`) and the red badge, findings and toolbar badge (`#c62828`) are slightly darker

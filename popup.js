@@ -38,6 +38,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     return el;
   }
 
+  // The version comes from manifest.json, the one place it is set.
+  document.getElementById('version').textContent = `Version ${chrome.runtime.getManifest().version}`;
+
   setUpBadgeToggle();
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

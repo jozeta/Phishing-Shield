@@ -2,13 +2,28 @@
 
 A lightweight browser extension that inspects the URL of the active tab and highlights signs of phishing or domain-spoofing — look-alikes of well-known brands, brand names on sites the brand doesn't own, logins hidden before `@`, unencrypted connections, raw IP addresses, unusual ports, punycode homograph attacks, and suspicious characters in the core domain. Optionally, it shows a verdict on the toolbar icon for every page.
 
+**Version 1.1.1** (from `manifest.json`; also shown in the popup)
+
+## What's new in 1.1.1
+
+- The popup shows its version number.
+
+1.1.0 added light-mode contrast that meets WCAG AA, ~70 brand look-alike checks, the full Public Suffix List, the opt-in toolbar verdict and dark mode. Older changes are in [CHANGELOG.md](CHANGELOG.md).
+
 ## Screenshots
 
-| Valid HTTPS domain | Brand name on someone else's domain | Look-alike, with more findings |
-|---|---|---|
-| ![Popup showing a validated HTTPS domain](docs/screenshots/popup-safe.png) | ![Popup flagging "paypal" on paypal.com.secure-login.net](docs/screenshots/popup-brand.png) | ![Popup flagging paypa1.com as a look-alike of paypal.com, plus unencrypted connection and unusual port](docs/screenshots/popup-lookalike.png) |
-| **Unencrypted connection** | **Punycode look-alike** | **Dark mode** |
-| ![Popup warning about a non-HTTPS connection](docs/screenshots/popup-http.png) | ![Popup flagging punycode spoofing on the core domain](docs/screenshots/popup-punycode.png) | ![Popup in dark mode flagging "swedbank" on swedbank-login.se](docs/screenshots/popup-dark.png) |
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/popup-safe.png" alt="Popup showing a validated HTTPS domain" width="260"><br>Valid HTTPS domain</td>
+    <td align="center"><img src="docs/screenshots/popup-brand.png" alt="Popup flagging &quot;paypal&quot; on paypal.com.secure-login.net" width="260"><br>Brand name on someone else's domain</td>
+    <td align="center"><img src="docs/screenshots/popup-lookalike.png" alt="Popup flagging paypa1.com as a look-alike of paypal.com, plus unencrypted connection and unusual port" width="260"><br>Look-alike, with more findings</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/popup-http.png" alt="Popup warning about a non-HTTPS connection" width="260"><br>Unencrypted connection</td>
+    <td align="center"><img src="docs/screenshots/popup-punycode.png" alt="Popup flagging punycode spoofing on the core domain" width="260"><br>Punycode look-alike</td>
+    <td align="center"><img src="docs/screenshots/popup-dark.png" alt="Popup in dark mode flagging &quot;swedbank&quot; on swedbank-login.se" width="260"><br>Dark mode</td>
+  </tr>
+</table>
 
 ## Description
 

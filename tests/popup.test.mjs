@@ -35,6 +35,7 @@ async function inspect(url, chromeExtras = {}) {
     chrome: {
       tabs: { query: async () => [url === null ? {} : { url }] },
       permissions: { contains: async () => false, request: async () => true, remove: async () => true },
+      runtime: { getManifest: () => ({ version: "9.8.7" }) },
       ...chromeExtras,
     },
   };
@@ -303,6 +304,11 @@ test("popup toggle unticks itself when the permission is refused", async () => {
   const r = await inspect("https://example.com/", { permissions: { contains: async () => false, request: async () => false } });
   r.els.badgeToggle.checked = true; await r.els.badgeToggle.listeners.change();
   assert.equal(r.els.badgeToggle.checked, false);
+});
+
+test("popup shows the version from the manifest", async () => {
+  const r = await inspect("https://example.com/");
+  assert.equal(r.els.version.textContent, "Version 9.8.7");
 });
 
 // Loads background.js like the browser does (importScripts + listeners) with a fake chrome.
